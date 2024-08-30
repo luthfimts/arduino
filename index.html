@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Penyimpanan Data Arduino</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: lightblue;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: navy;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-field {
+            padding: 10px;
+            margin-bottom: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        textarea.input-field {
+            resize: vertical; /* Allows the textarea to be resizable vertically */
+        }
+
+        button {
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #dataList ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #dataList li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            position: relative;
+        }
+
+        .copy-button {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .copy-button:hover {
+            background-color: #138496;
+        }
+
+        .code {
+            display: none;
+            white-space: pre-wrap;
+            background-color: #f4f4f4;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .toggle-button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .toggle-button:hover {
+            background-color: #218838;
+        }
+
+        .delete-button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+
+        .name {
+            font-weight: bold;
+        }
+
+        footer {
+            margin-top: auto;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #666;
+            border-top: 1px solid #ddd;
+        }
+
+        footer p {
+            margin: 0;
+        }
+
+        footer strong {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Website Penyimpanan Coding Arduino</h1>
+        <form id="dataForm">
+            <label for="nameInput">Nama Kode:</label>
+            <input type="text" id="nameInput" class="input-field" required>
+            <label for="dataInput">Masukkan Coding Arduino:</label>
+            <textarea id="dataInput" class="input-field" rows="10" disabled required></textarea>
+            <button type="submit" disabled>Simpan Kode</button>
+        </form>
+        <div id="dataList">
+            <h2>Kode Tersimpan:</h2>
+            <ul id="dataItems"></ul>
+        </div>
+        <footer>
+            <p>@copyright 2024: Muhammd Luthfi Khoirullah</p>
+        </footer>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const dataForm = document.getElementById('dataForm');
+            const nameInput = document.getElementById('nameInput');
+            const dataInput = document.getElementById('dataInput');
+            const saveButton = dataForm.querySelector('button');
+            const dataItems = document.getElementById('dataItems');
+
+            // Fungsi untuk menampilkan data dari LocalStorage
+            function displayData() {
+                const storedData = JSON.parse(localStorage.getItem('dataList')) || [];
+                dataItems.innerHTML = '';
+                storedData.forEach((item, index) => {
+                    const li = document.createElement('li');
+                    
+                    // Menampilkan nama kode
+                    const nameElement = document.createElement('div');
+                    nameElement.className = 'name';
+                    nameElement.textContent = item.name;
+
+                    // Membuat elemen kode
+                    const codeBlock = document.createElement('pre');
+                    codeBlock.className = 'code';
+                    codeBlock.textContent = item.code;
+
+                    // Membuat tombol untuk menampilkan/menyembunyikan kode
+                    const toggleButton = document.createElement('button');
+                    toggleButton.className = 'toggle-button';
+                    toggleButton.textContent = 'Tampilkan Kode';
+                    toggleButton.onclick = () => {
+                        const isVisible = codeBlock.style.display === 'block';
+                        codeBlock.style.display = isVisible ? 'none' : 'block';
+                        toggleButton.textContent = isVisible ? 'Tampilkan Kode' : 'Sembunyikan Kode';
+                    };
+
+                    // Membuat tombol salin
+                    const copyButton = document.createElement('button');
+                    copyButton.className = 'copy-button';
+                    copyButton.textContent = 'Salin';
+                    copyButton.onclick = () => {
+                        navigator.clipboard.writeText(item.code)
+                            .then(() => {
+                                alert('Kode berhasil disalin!');
+                            })
+                            .catch(err => {
+                                console.error('Gagal menyalin kode: ', err);
+                            });
+                    };
+
+                    // Membuat tombol hapus
+                    const deleteButton = document.createElement('button');
+                    deleteButton.className = 'delete-button';
+                    deleteButton.textContent = 'Hapus';
+                    deleteButton.onclick = () => {
+                        deleteData(index);
+                    };
+
+                    li.appendChild(nameElement);
+                    li.appendChild(toggleButton);
+                    li.appendChild(copyButton);
+                    li.appendChild(codeBlock);
+                    li.appendChild(deleteButton);
+                    dataItems.appendChild(li);
+                });
+            }
+
+            // Fungsi untuk menghapus data berdasarkan index
+            function deleteData(index) {
+                const storedData = JSON.parse(localStorage.getItem('dataList')) || [];
+                storedData.splice(index, 1); // Menghapus item dari array
+                localStorage.setItem('dataList', JSON.stringify(storedData));
+                displayData(); // Menampilkan ulang data
+            }
+
+            // Fungsi untuk memeriksa validitas input
+            function checkInput() {
+                if (nameInput.value.trim() !== '') {
+                    dataInput.disabled = false;
+                    saveButton.disabled = false;
+                } else {
+                    dataInput.disabled = true;
+                    saveButton.disabled = true;
+                    dataInput.value = '';
+                }
+            }
+
+            // Menampilkan data saat halaman dimuat
+            displayData();
+
+            // Menangani perubahan input nama
+            nameInput.addEventListener('input', checkInput);
+
+            // Menangani pengiriman formulir
+            dataForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const newName = nameInput.value;
+                const newData = dataInput.value;
+                const storedData = JSON.parse(localStorage.getItem('dataList')) || [];
+                storedData.push({ name: newName, code: newData });
+                localStorage.setItem('dataList', JSON.stringify(storedData));
+                nameInput.value = '';
+                dataInput.value = '';
+                dataInput.disabled = true;
+                saveButton.disabled = true;
+                displayData();
+            });
+        });
+    </script>
+</body>
+</html>
